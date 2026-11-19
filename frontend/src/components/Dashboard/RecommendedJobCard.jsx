@@ -99,6 +99,20 @@ export default function RecommendedJobCard({ job, onLearnMore, isApplied = false
               </div>
             )}
 
+            {job.recommendation?.reasons?.length > 0 && (
+              <div className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-950">
+                <div className="mb-1 flex items-center justify-between font-semibold">
+                  <span>Why this job matches</span>
+                  <span>{Math.round((job.recommendation.breakdown?.final || job.recommendation.score || 0) * 100)}% match</span>
+                </div>
+                <ul className="list-inside list-disc space-y-1">
+                  {job.recommendation.reasons.slice(0, 3).map((reason, index) => (
+                    <li key={index}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {job.isHiring && (

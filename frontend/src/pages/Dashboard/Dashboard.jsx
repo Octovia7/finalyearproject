@@ -8,12 +8,16 @@ import { useNavigate } from "react-router-dom";
 import userService from "@/Api/UserService";
 import profileService from "@/Api/profileService";
 import { logout } from "@/Api/AuthService";
+import API from "@/Api/api";
 
 export default function SmartHireApp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
   const [recentApplications, setRecentApplications] = useState([]);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+  const [recommendationError, setRecommendationError] = useState("");
   const [appliedJobIds, setAppliedJobIds] = useState([]); // Track applied job IDs
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -26,6 +30,7 @@ export default function SmartHireApp() {
   useEffect(() => {
     dispatch(fetchAllJobs());
     loadUserData();
+    loadRecommendedJobs();
   }, [dispatch]);
 
   // Close dropdown when clicking outside
@@ -41,6 +46,19 @@ export default function SmartHireApp() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const loadRecommendedJobs = async () => {
+    setLoadingRecommendations(true);
+    setRecommendationError("");
+    try {
+      const response = await API.get("/jobs/ai-recommended?limit=6");
+      setRecommendedJobs(response.data.recommendedJobs || []);
+    } catch (err) {
+      setRecommendationError(err.response?.data?.message || "Could not load AI recommendations.");
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -343,7 +361,7 @@ export default function SmartHireApp() {
             </button>
           </div>
 
-          {loading && (
+          {loadingRecommendations && (
             <div className="flex justify-center py-8 bg-white rounded-lg border">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -352,11 +370,11 @@ export default function SmartHireApp() {
             </div>
           )}
           
-          {error && (
+          {recommendationError && (
             <div className="text-center py-8 bg-white rounded-lg border">
-              <p className="text-red-500 mb-4">{error}</p>
+              <p className="text-red-500 mb-4">{recommendationError}</p>
               <button 
-                onClick={() => dispatch(fetchAllJobs())}
+                onClick={loadRecommendedJobs}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
                 Retry
@@ -365,7 +383,7 @@ export default function SmartHireApp() {
           )}
 
           <div className="space-y-4">
-            {!loading && !error && jobs.slice(0, 6).map((job, idx) => (
+            {!loadingRecommendations && !recommendationError && recommendedJobs.map((job, idx) => (
               <RecommendedJobCard
                 key={job._id || idx}
                 job={job}
@@ -377,13 +395,13 @@ export default function SmartHireApp() {
           </div>
 
           {/* Show More Jobs Button */}
-          {!loading && !error && jobs.length > 6 && (
+          {!loadingRecommendations && !recommendationError && recommendedJobs.length > 0 && (
             <div className="text-center mt-6">
               <button 
                 onClick={() => navigate("/dashboard/jobs")}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                View More Jobs ({jobs.length - 6} more available)
+                Browse All Jobs
               </button>
             </div>
           )}

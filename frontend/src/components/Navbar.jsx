@@ -21,7 +21,7 @@ function Navbar() {
         <>
             <div className="h-16 lg:h-16 w-full flex justify-between items-center px-5 md:px-[5%] bg-white z-50 fixed top-0 transition-all duration-300 shadow-md">
                 <Link to="/" className="logo text-2xl lg:text-2xl font-bold cursor-pointer">
-                    <img className='h-10 lg:h-12' src="/softHireLogo.png" alt="Logo" />
+                    <img className='h-10 lg:h-12' src="/smartHireLogo.png" alt="Logo" />
                 </Link>
                 <div className="hidden lg:flex navOption items-center gap-10">
                     <Link to="/" className={navLinkClass('/')}>Home</Link>
