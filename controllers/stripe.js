@@ -110,7 +110,7 @@ exports.handleWebhook = async (req, res) => {
           from: process.env.EMAIL,
           to: candidate.userId.email,
           subject: "✅ Payment Received – Skilled Worker Visa",
-          text: `Hi ${candidate.userId.fullName},\n\nThank you for your payment of £${(candidate.paidAmount / 100).toFixed(2)}. Your skilled worker visa application has been submitted.\n\nRegards,\nSoftHire Team`
+          text: `Hi ${candidate.userId.fullName},\n\nThank you for your payment of £${(candidate.paidAmount / 100).toFixed(2)}. Your skilled worker visa application has been submitted.\n\nRegards,\nSmartHire Team`
         });
 
         console.log("✅ Candidate payment marked as paid & confirmation email sent");
@@ -138,7 +138,7 @@ exports.handleWebhook = async (req, res) => {
           from: process.env.EMAIL,
           to: application.user.email,
           subject: "✅ Payment Received – Sponsor Licence Application",
-          text: `Hi ${application.user.fullName},\n\nThank you for your payment of £${(application.paidAmount / 100).toFixed(2)}. Your sponsor licence application has been submitted.\n\nRegards,\nSoftHire Team`
+          text: `Hi ${application.user.fullName},\n\nThank you for your payment of £${(application.paidAmount / 100).toFixed(2)}. Your sponsor licence application has been submitted.\n\nRegards,\nSmartHire Team`
         });
 
         await sendAdminApplicationDetails(application);

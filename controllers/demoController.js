@@ -91,8 +91,8 @@ exports.scheduleDemo = async (req, res) => {
       }),
       attachments: [
         {
-          filename: "logo.jpg",
-          path: path.join(__dirname, "../public/images/logo.jpg"),
+          filename: "logo-smarthire.png",
+          path: path.join(__dirname, "../public/images/logo-smarthire.png"),
           cid: "logo", // Must match the cid used in <img src="cid:logo">
         },
       ],

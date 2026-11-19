@@ -1,4 +1,4 @@
-﻿# SoftHire
+﻿# SmartHire
 
 A scalable recruitment and sponsorship management platform for organizations and candidates, built with Node.js, Express, and MongoDB.
 
@@ -6,7 +6,7 @@ A scalable recruitment and sponsorship management platform for organizations and
 
 ## 🎯 Purpose
 
-SoftHire streamlines the hiring and sponsorship process for organizations and candidates by providing:
+SmartHire streamlines the hiring and sponsorship process for organizations and candidates by providing:
 
 - End-to-end job posting and application management
 - Multi-role authentication (candidates, recruiters)
@@ -21,7 +21,7 @@ SoftHire streamlines the hiring and sponsorship process for organizations and ca
 The project follows a modular, layered architecture for maintainability and scalability:
 
 ```
-softhire/
+smarthire/
 ├── config/                     # Authentication and environment config
 │   └── passport.js             # Google OAuth setup (serialization/deserialization)
 │
@@ -102,6 +102,7 @@ softhire/
 │   └── (files stored here)
 │
 ├── utils/                     # Helper utilities
+│   ├── aiRecommender.js              # Sponsorship-aware explainable job ranking
 │   ├── mailer.js                     # Email sending utility
 │   ├── multer.js                     # Generic multer config
 │   ├── resumeMulter.js               # Resume upload middleware
@@ -128,6 +129,13 @@ softhire/
 
 - ✅ Organization registration and onboarding
 - ✅ Organization dashboard and recruiter management
+
+### AI Job Recommendations
+
+- Protected GET /api/jobs/ai-recommended ranks active jobs using TF-IDF skill similarity, co-occurrence skill embeddings, role/location/salary context, and sponsorship eligibility.
+- Results include a score breakdown, matched skills, related skills, and plain-language reasons. The legacy /api/jobs/recommended route returns the same ranked results.
+
+The paper describes offline Word2Vec artifacts and a benchmark corpus; neither is included in this repository. This implementation derives distributional skill vectors from active job postings, so the paper reported metrics are not claimed.
 
 ### Job & Application Management
 
@@ -186,7 +194,7 @@ softhire/
 
 ```bash
 git clone <repository-url>
-cd softhire
+cd smarthire
 
 # Install dependencies
 npm install
@@ -433,3 +441,4 @@ node server.js
 ---
 
 **Built with ❤️ for global hiring and sponsorship workflows**
+

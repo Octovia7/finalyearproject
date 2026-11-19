@@ -28,7 +28,7 @@ exports.submitConsultForm = async (req, res) => {
         });
 
         await newRequest.save();
-        await sendConsultEmail(newRequest);  // sends to SoftHire
+        await sendConsultEmail(newRequest);  // sends to SmartHire
 
         res.status(201).json({ message: "Thank you, we’ll be in touch with you shortly." });
     } catch (err) {

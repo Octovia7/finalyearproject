@@ -1,5 +1,6 @@
 const ContactForm = require("../models/ContactForm");
 const nodemailer = require("nodemailer");
+const path = require("path");
 
 exports.submitContactForm = async (req, res) => {
   try {
@@ -26,7 +27,7 @@ exports.submitContactForm = async (req, res) => {
         <html>
           <body style="font-family: Arial, sans-serif; color: #333;">
             <div style="text-align: center;">
-              <img src=".\public\images\logo.jpg" alt="SoftHire Logo" style="max-width: 200px;"/>
+              <img src="cid:smarthirelogo" alt="SmartHire Logo" style="max-width: 200px;"/>
             </div>
             <h3>New Contact Form Submission</h3>
             <p><strong>Name:</strong> ${firstName} ${lastName}</p>
@@ -36,6 +37,7 @@ exports.submitContactForm = async (req, res) => {
           </body>
         </html>
       `,
+      attachments: [{ filename: "logo-smarthire.png", path: path.join(__dirname, "../public/images/logo-smarthire.png"), cid: "smarthirelogo" }],
     };
 
     await transporter.sendMail(mailOptions);

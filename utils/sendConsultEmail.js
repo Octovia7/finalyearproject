@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 const sendConsultEmail = async (data) => {
     const mailOptions = {
         from: process.env.EMAIL,
-        to: process.env.EMAIL,  // example: softhire@example.com
+        to: process.env.EMAIL,  // example: smarthire@example.com
         subject: "New Consultation Request",
         text: `
 New consult request received:

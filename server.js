@@ -157,10 +157,11 @@ app.use("/api/recruiter", recruiterProfileRoutes);
 
 // ⬇️ Health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));
-app.get("/", (req, res) => res.send("SoftHire API is running..."));
+app.get("/", (req, res) => res.send("SmartHire API is running..."));
 
 // ⬇️ Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
 });
+

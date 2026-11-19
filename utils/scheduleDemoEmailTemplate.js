@@ -12,7 +12,7 @@ module.exports = ({
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="cid:logo" alt="SoftHire Logo" style="max-width: 150px;">
+          <img src="cid:logo" alt="SmartHire Logo" style="max-width: 150px;">
         </div>
   
         <h2 style="color: #333;">New Schedule Demo Request</h2>
@@ -55,7 +55,7 @@ module.exports = ({
         </table>
   
        <p style="margin-top: 30px; font-size: 14px; color: #555;">
-  This notification was generated automatically following a Schedule Demo request submitted via the SoftHire website. Please review the details above and take appropriate action.
+  This notification was generated automatically following a Schedule Demo request submitted via the SmartHire website. Please review the details above and take appropriate action.
 </p>
       </div>
     `;
