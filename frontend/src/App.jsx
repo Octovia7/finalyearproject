@@ -29,7 +29,7 @@ import Profile from "./pages/Dashboard/Profile.jsx";
 import JobDetailsPage from "./pages/Dashboard/JobDetails.jsx";
 import JobSearch from "./pages/Dashboard/JobSearch.jsx";
 import UKBlogPage from "./pages/BlogPage.jsx";
-import WhyWeBuiltSmartHire from "./pages/WhySmartHire.jsx";
+import WhyWeBuiltSmartHire from "./pages/WhySofthire.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
