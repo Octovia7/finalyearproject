@@ -8,33 +8,89 @@ const cosine = (a = {}, b = {}) => {
   for (const v of Object.values(b)) nb += v * v;
   return na && nb ? dot / Math.sqrt(na * nb) : 0;
 };
+// Train a small skip-gram Word2Vec model with negative sampling (SGNS) over
+// job skill lists. Each posting is a sentence and its skills are the tokens.
+// Training is deterministic and cached by the posting-corpus signature below.
 const buildIndex = (jobs) => {
-  const docs = jobs.map((j) => skillsOf(j.skills)), df = new Map(), freq = new Map(), pairs = new Map();
+  // Keep request-time training bounded; use a stable slice from the ordered job query.
+  const docs = jobs.map((j) => skillsOf(j.skills).slice(0, 30)).filter((doc) => doc.length).slice(0, 300);
+  const df = new Map();
+  for (const doc of docs) for (const skill of new Set(doc)) df.set(skill, (df.get(skill) || 0) + 1);
+  const idf = new Map([...df].map(([skill, count]) => [skill, Math.log((docs.length + 1) / (count + 1)) + 1]));
+  const vocab = [...df.keys()].sort();
+  const vectors = new Map();
+  if (vocab.length < 2) return { idf, vectors };
+
+  const dimension = 32, window = 3, epochs = 10, negativeSamples = 3;
+  const wordIndex = new Map(vocab.map((word, i) => [word, i]));
+  const counts = vocab.map((word) => df.get(word));
+  const poweredCounts = counts.map((count) => count ** 0.75);
+  const countTotal = poweredCounts.reduce((sum, count) => sum + count, 0);
+  const cumulative = [];
+  poweredCounts.reduce((sum, count, i) => (cumulative[i] = sum + count / countTotal), 0);
+
+  // Seed the pseudo-random generator from the normalized corpus for repeatable
+  // training across requests and server restarts.
+  let seed = 2166136261;
+  for (const doc of docs) for (const word of doc) {
+    for (let i = 0; i < word.length; i++) seed = Math.imul(seed ^ word.charCodeAt(i), 16777619);
+  }
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const input = vocab.map(() => Float64Array.from({ length: dimension }, () => (random() - 0.5) / dimension));
+  const output = vocab.map(() => new Float64Array(dimension));
+  const pairs = [];
   for (const doc of docs) {
-    for (const s of doc) { df.set(s, (df.get(s) || 0) + 1); freq.set(s, (freq.get(s) || 0) + 1); }
-    for (let i = 0; i < doc.length; i++) for (let j = i + 1; j < doc.length; j++) {
-      const [a, b] = [doc[i], doc[j]].sort(), key = a + String.fromCharCode(0) + b;
-      pairs.set(key, (pairs.get(key) || 0) + 1);
+    const tokens = doc.map((word) => wordIndex.get(word)).filter((index) => index !== undefined);
+    for (let i = 0; i < tokens.length; i++) {
+      for (let j = Math.max(0, i - window); j <= Math.min(tokens.length - 1, i + window); j++) {
+        if (i !== j) pairs.push([tokens[i], tokens[j]]);
+      }
     }
   }
-  const n = Math.max(docs.length, 1);
-  const idf = new Map([...df].map(([s, f]) => [s, Math.log((n + 1) / (f + 1)) + 1]));
-  const vectors = new Map();
-  for (const [key, count] of pairs) {
-    const [a, b] = key.split(String.fromCharCode(0));
-    const pmi = Math.log(count * n / ((freq.get(a) || 1) * (freq.get(b) || 1)));
-    if (pmi <= 0) continue;
-    if (!vectors.has(a)) vectors.set(a, {});
-    if (!vectors.has(b)) vectors.set(b, {});
-    vectors.get(a)[b] = pmi; vectors.get(b)[a] = pmi;
+  const sigmoid = (value) => value > 8 ? 0.9997 : value < -8 ? 0.0003 : 1 / (1 + Math.exp(-value));
+  const trainPair = (target, context, label, rate) => {
+    let dot = 0;
+    for (let k = 0; k < dimension; k++) dot += input[target][k] * output[context][k];
+    const gradient = (label - sigmoid(dot)) * rate;
+    for (let k = 0; k < dimension; k++) {
+      const oldInput = input[target][k];
+      input[target][k] += gradient * output[context][k];
+      output[context][k] += gradient * oldInput;
+    }
+  };
+  for (let epoch = 0; epoch < epochs; epoch++) {
+    const rate = Math.max(0.0025, 0.025 * (1 - epoch / epochs));
+    for (const [target, context] of pairs) {
+      trainPair(target, context, 1, rate);
+      for (let n = 0; n < negativeSamples; n++) {
+        const sample = random();
+        let lo = 0, hi = cumulative.length - 1;
+        while (lo < hi) { const mid = (lo + hi) >> 1; if (sample <= cumulative[mid]) hi = mid; else lo = mid + 1; }
+        if (lo !== context) trainPair(target, lo, 0, rate);
+      }
+    }
   }
+  vocab.forEach((word, i) => vectors.set(word, Array.from(input[i])));
   return { idf, vectors };
 };
+const cosineVectors = (a = [], b = []) => {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < Math.min(a.length, b.length); i++) { dot += a[i] * b[i]; na += a[i] ** 2; nb += b[i] ** 2; }
+  return na && nb ? dot / Math.sqrt(na * nb) : 0;
+};
 const embedSet = (set, index) => {
-  const out = {};
-  for (const s of set) for (const [neighbor, value] of Object.entries(index.vectors.get(s) || {}))
-    out[neighbor] = (out[neighbor] || 0) + (index.idf.get(s) || 1) * value;
-  return out;
+  const out = new Array(32).fill(0);
+  let totalWeight = 0;
+  for (const skill of set) {
+    const vector = index.vectors.get(skill), weight = index.idf.get(skill) || 1;
+    if (!vector) continue;
+    totalWeight += weight;
+    for (let i = 0; i < vector.length; i++) out[i] += vector[i] * weight;
+  }
+  return totalWeight ? out.map((value) => value / totalWeight) : [];
 };
 const scoreJob = (profile, prefs, job, index) => {
   const cs = skillsOf(profile.skills), js = skillsOf(job.skills), cset = new Set(cs), jset = new Set(js);
@@ -60,7 +116,7 @@ const scoreJob = (profile, prefs, job, index) => {
     if (cset.has(skill)) continue;
     let best = null, similarity = 0;
     for (const candidateSkill of cs) {
-      const value = cosine(index.vectors.get(skill), index.vectors.get(candidateSkill));
+      const value = cosineVectors(index.vectors.get(skill), index.vectors.get(candidateSkill));
       if (value > similarity) { best = candidateSkill; similarity = value; }
     }
     if (best && similarity >= .6) relatedSkills.push({ jobSkill: skill, candidateSkill: best, similarity: Number(similarity.toFixed(3)) });

@@ -132,10 +132,10 @@ smarthire/
 
 ### AI Job Recommendations
 
-- Protected GET /api/jobs/ai-recommended ranks active jobs using TF-IDF skill similarity, co-occurrence skill embeddings, role/location/salary context, and sponsorship eligibility.
+- Protected GET /api/jobs/ai-recommended ranks active jobs using TF-IDF skill similarity, a 32-dimensional skip-gram Word2Vec model trained from up to 300 active job skill lists (30 skills per listing), role/location/salary context, and sponsorship eligibility. The model is trained in memory and cached until the job-skill corpus changes.
 - Results include a score breakdown, matched skills, related skills, and plain-language reasons. The legacy /api/jobs/recommended route returns the same ranked results.
 
-The paper describes offline Word2Vec artifacts and a benchmark corpus; neither is included in this repository. This implementation derives distributional skill vectors from active job postings, so the paper reported metrics are not claimed.
+The paper describes offline Word2Vec artifacts and a benchmark corpus; neither is included in this repository. The current implementation now trains a small Word2Vec model from active job skill lists at runtime. This is not the paper's offline artifact or benchmark setup, so the paper's reported metrics are not claimed.
 
 ### Job & Application Management
 
